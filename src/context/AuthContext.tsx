@@ -1,72 +1,126 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-}
+import { User } from '@supabase/supabase-js';
+
+import { supabase } from '@/lib/supabase';
 
 interface AuthContextType {
   user: User | null;
+
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+
+  login: (
+    email: string,
+    password: string
+  ) => Promise<void>;
+
   loginWithGoogle: () => Promise<void>;
+
   loginWithGitHub: () => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+
+  register: (
+    email: string,
+    password: string
+  ) => Promise<void>;
+
+  logout: () => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext =
+  createContext<AuthContextType | undefined>(
+    undefined
+  );
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+export function AuthProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
 
-  const login = async (email: string, password: string) => {
-    // Simulación de login
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setUser({
-      id: '1',
-      name: email.split('@')[0],
-      email,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
-    });
+  const [user, setUser] =
+    useState<User | null>(null);
+
+  useEffect(() => {
+
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        setUser(data.user);
+      });
+
+    const {
+      data: listener,
+    } =
+      supabase.auth.onAuthStateChange(
+        (_, session) => {
+          setUser(session?.user ?? null);
+        }
+      );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+
+  }, []);
+
+  const login = async (
+    email: string,
+    password: string
+  ) => {
+
+    const { error } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+    if (error) {
+      throw error;
+    }
   };
 
-  const loginWithGoogle = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setUser({
-      id: '1',
-      name: 'Usuario Google',
-      email: 'usuario@gmail.com',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=google'
-    });
+  const register = async (
+    email: string,
+    password: string
+  ) => {
+
+    const { error } =
+      await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+    if (error) {
+      throw error;
+    }
   };
 
-  const loginWithGitHub = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setUser({
-      id: '1',
-      name: 'Usuario GitHub',
-      email: 'usuario@github.com',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=github'
-    });
-  };
+  const loginWithGoogle =
+    async () => {
 
-  const register = async (email: string, password: string) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setUser({
-      id: '1',
-      name: email.split('@')[0],
-      email,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`
-    });
-  };
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+    };
 
-  const logout = () => {
-    setUser(null);
+  const loginWithGitHub =
+    async () => {
+
+      await supabase.auth.signInWithOAuth({
+        provider: 'github',
+      });
+    };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
@@ -78,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginWithGoogle,
         loginWithGitHub,
         register,
-        logout
+        logout,
       }}
     >
       {children}
@@ -87,9 +141,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+
+  const context =
+    useContext(AuthContext);
+
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error(
+      'useAuth must be used within an AuthProvider'
+    );
   }
+
   return context;
 }
