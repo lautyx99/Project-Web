@@ -1,5 +1,11 @@
 "use client";
 
+import { useEffect, useState }
+from 'react';
+
+import { supabase }
+from '@/lib/supabase';
+
 import {
   User,
   TrendingUp,
@@ -21,32 +27,52 @@ import {
 import { Button } from "@/components/ui/button";
 
 export default function ProfilePage() {
-  const profile = {
-    name: "Desarrollador",
-    email: "dev@email.com",
-    seniority: "Senior",
 
-    modality: ["Remoto", "Híbrido"],
+  useEffect(() => {
 
-    skills: [
-      "React",
-      "TypeScript",
-      "Node.js",
-      "GraphQL",
-      "AWS",
-      "PostgreSQL",
-      "Docker",
-      "Git",
-      "Python",
-      "MongoDB",
-    ],
+  const fetchProfile =
+    async () => {
 
-    stats: {
-      avgMatch: 85,
-      applicationsCount: 12,
-      savedJobs: 5,
-    },
-  };
+      const {
+        data: { user },
+      } =
+        await supabase.auth.getUser();
+
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } =
+        await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+      if (error) {
+        console.error(error);
+      } else {
+        setProfile(data);
+      }
+
+      setLoading(false);
+    };
+
+  fetchProfile();
+
+}, []);
+  const [profile, setProfile] =
+  useState<any>(null);
+
+const [loading, setLoading] =
+  useState(true);
+
+  const stats = {
+  avgMatch: 85,
+  applicationsCount: 12,
+  savedJobs: 5,
+};
 
   const marketTrends = [
     { skill: "React", demand: 95 },
@@ -64,6 +90,22 @@ export default function ProfilePage() {
     { month: "Abr", score: 82 },
     { month: "May", score: 85 },
   ];
+
+  if (loading) {
+  return (
+    <div className="p-8">
+      Cargando perfil...
+    </div>
+  );
+}
+
+if (!profile) {
+  return (
+    <div className="p-8">
+      No se encontró el perfil
+    </div>
+  );
+}
 
   return (
     <div className="space-y-8">
@@ -100,7 +142,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="text-3xl font-bold text-green-500 mb-1">
-            {profile.stats.avgMatch}%
+            {stats.avgMatch}%
           </div>
 
           <p className="text-sm text-muted-foreground">
@@ -119,7 +161,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="text-3xl font-bold text-blue-500 mb-1">
-            {profile.stats.applicationsCount}
+            {stats.applicationsCount}
           </div>
 
           <p className="text-sm text-muted-foreground">
@@ -167,7 +209,7 @@ export default function ProfilePage() {
               </p>
 
               <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-500 text-sm font-medium">
-                {profile.seniority}
+                {profile.experience_level}
               </span>
             </div>
 
@@ -178,7 +220,7 @@ export default function ProfilePage() {
               </p>
 
               <div className="flex flex-wrap gap-2">
-                {profile.modality.map((mod) => (
+                {profile.preferred_modalities?.map((mod:string) => (
                   <span
                     key={mod}
                     className="px-3 py-1 rounded-full bg-muted text-sm"
@@ -196,7 +238,7 @@ export default function ProfilePage() {
               </p>
 
               <div className="flex flex-wrap gap-2">
-                {profile.skills.slice(0, 6).map((skill) => (
+                {profile.skills.slice(0, 6).map((skill:string) => (
                   <span
                     key={skill}
                     className="px-3 py-1 rounded-full bg-green-500/10 text-green-500 text-sm font-medium"
@@ -207,13 +249,32 @@ export default function ProfilePage() {
 
                 {profile.skills.length > 6 && (
                   <span className="px-3 py-1 rounded-full bg-muted text-sm">
-                    +{profile.skills.length - 6}
+                    +{profile?.skills?.length || 0}
                   </span>
                 )}
               </div>
             </div>
+
+            <div>
+         <p className="text-sm text-muted-foreground mb-2">
+          Área profesional
+          </p>
+          <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-sm font-medium">
+          {profile.professional_area}
+          </span>
+
+          <div className= "mt-3">
+          <p className="text-sm text-muted-foreground mb-2">
+          Estudios
+          </p>
+          <span className="px-3 py-2 rounded-full bg-green-500/10 text-green-500 text-sm font-medium">
+          {profile.education_level}
+           </span>
+          </div>
+          </div>
           </div>
         </div>
+
 
         {/* MARKET */}
         <div className="bg-card border border-border rounded-2xl p-6">

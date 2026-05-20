@@ -15,6 +15,7 @@ import {
   X,
   Sparkles,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export function OnboardingPageContent() {
 
@@ -31,16 +32,19 @@ export function OnboardingPageContent() {
   const [skillInput, setSkillInput] =
     useState('');
 
-  const [seniority, setSeniority] =
-    useState('');
+  const [professionalArea, setProfessionalArea] =
+  useState('');
 
-  const [modality, setModality] =
-    useState<string[]>([]);
+const [experienceLevel, setExperienceLevel] =
+  useState('');
 
-  const [stack, setStack] =
-    useState<string[]>([]);
+const [educationLevel, setEducationLevel] =
+  useState('');
 
-  const totalSteps = 4;
+const [preferredModalities, setPreferredModalities] =
+  useState<string[]>([]);
+
+  const totalSteps = 5;
 
   const addSkill = () => {
     if (
@@ -66,41 +70,58 @@ export function OnboardingPageContent() {
     );
   };
 
-  const toggleModality = (
-    mod: string
-  ) => {
-    setModality((prev) =>
-      prev.includes(mod)
-        ? prev.filter(
-            (m) => m !== mod
-          )
-        : [...prev, mod]
-    );
-  };
+  const handleNext = async () => {
 
-  const toggleStack = (
-    tech: string
-  ) => {
-    setStack((prev) =>
-      prev.includes(tech)
-        ? prev.filter(
-            (t) => t !== tech
-          )
-        : [...prev, tech]
-    );
-  };
+  if (currentStep < totalSteps) {
+    setCurrentStep(currentStep + 1);
+    return;
+  }
 
-  const handleNext = () => {
-    if (
-      currentStep < totalSteps
-    ) {
-      setCurrentStep(
-        currentStep + 1
-      );
-    } else {
-      router.push('/dashboard');
+  try {
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({
+        id: user.id,
+
+        email: user.email,
+
+        full_name:
+          user.user_metadata
+            ?.full_name || '',
+
+        skills,
+
+        professional_area:
+          professionalArea,
+
+        experience_level:
+          experienceLevel,
+
+        education_level:
+          educationLevel,
+
+        preferred_modalities:
+          preferredModalities,
+      });
+
+    if (error) {
+      console.error(error);
+      return;
     }
-  };
+
+    router.push('/dashboard');
+
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   const handlePrev = () => {
     if (currentStep > 1) {
@@ -229,129 +250,177 @@ export function OnboardingPageContent() {
 
           {/* STEP 2 */}
           {currentStep === 2 && (
-            <div className="space-y-6">
+  <div className="space-y-6">
 
-              <div>
-                <h3 className="mb-2">
-                  ¿Cuál es tu nivel
-                  de seniority?
-                </h3>
-              </div>
+    <div>
+      <h3 className="mb-2">
+        ¿En qué área trabajás?
+      </h3>
 
-              <div className="grid gap-3">
+      <p className="text-sm text-muted-foreground mb-4">
+        Seleccioná el área profesional
+        que mejor te representa
+      </p>
+    </div>
 
-                {[
-                  'Junior',
-                  'Semi-Senior',
-                  'Senior',
-                  'Lead/Staff',
-                ].map((level) => (
-                  <button
-                    key={level}
-                    onClick={() =>
-                      setSeniority(
-                        level
-                      )
-                    }
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      seniority ===
-                      level
-                        ? 'border-[#4F46E5] bg-purple-50'
-                        : 'border-border hover:border-muted-foreground'
-                    }`}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+    <div className="grid gap-3">
+
+      {[
+        'Tecnología',
+        'Diseño',
+        'Marketing',
+        'Ventas',
+        'Administración',
+        'Finanzas',
+        'RRHH',
+        'Educación',
+        'Salud',
+        'Atención al cliente',
+      ].map((area) => (
+        <button
+          key={area}
+          onClick={() =>
+            setProfessionalArea(area)
+          }
+          className={`p-4 rounded-lg border-2 transition-all text-left ${
+            professionalArea === area
+              ? 'border-[#4F46E5] bg-purple-50'
+              : 'border-border hover:border-muted-foreground'
+          }`}
+        >
+          {area}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
 
           {/* STEP 3 */}
           {currentStep === 3 && (
-            <div className="space-y-6">
+  <div className="space-y-6">
 
-              <div>
-                <h3 className="mb-2">
-                  Modalidad de
-                  trabajo
-                </h3>
-              </div>
+    <div>
+      <h3 className="mb-2">
+        ¿Cuál es tu nivel de experiencia?
+      </h3>
+    </div>
 
-              <div className="grid gap-3">
+    <div className="grid gap-3">
 
-                {[
-                  'Remoto',
-                  'Híbrido',
-                  'Presencial',
-                ].map((mod) => (
-                  <button
-                    key={mod}
-                    onClick={() =>
-                      toggleModality(
-                        mod
-                      )
-                    }
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      modality.includes(
-                        mod
-                      )
-                        ? 'border-[#4F46E5] bg-purple-50'
-                        : 'border-border hover:border-muted-foreground'
-                    }`}
-                  >
-                    {mod}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+      {[
+        'Sin experiencia',
+        'Junior',
+        'Semi Senior',
+        'Senior',
+        'Management',
+      ].map((level) => (
+        <button
+          key={level}
+          onClick={() =>
+            setExperienceLevel(level)
+          }
+          className={`p-4 rounded-lg border-2 transition-all text-left ${
+            experienceLevel === level
+              ? 'border-[#4F46E5] bg-purple-50'
+              : 'border-border hover:border-muted-foreground'
+          }`}
+        >
+          {level}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
 
           {/* STEP 4 */}
           {currentStep === 4 && (
-            <div className="space-y-6">
+  <div className="space-y-6">
 
-              <div>
-                <h3 className="mb-2">
-                  ¿Con qué stack
-                  trabajás?
-                </h3>
-              </div>
+    <div>
+      <h3 className="mb-2">
+        ¿Cuál es tu nivel de estudios?
+      </h3>
+    </div>
 
-              <div className="grid grid-cols-2 gap-3">
+    <div className="grid gap-3">
 
-                {[
-                  'Frontend',
-                  'Backend',
-                  'Full Stack',
-                  'Mobile',
-                  'DevOps',
-                  'Data Science',
-                  'QA',
-                  'Design',
-                ].map((tech) => (
-                  <button
-                    key={tech}
-                    onClick={() =>
-                      toggleStack(
-                        tech
-                      )
-                    }
-                    className={`p-3 rounded-lg border-2 transition-all ${
-                      stack.includes(
-                        tech
-                      )
-                        ? 'border-[#4F46E5] bg-purple-50'
-                        : 'border-border hover:border-muted-foreground'
-                    }`}
-                  >
-                    {tech}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+      {[
+        'Secundario',
+        'Terciario',
+        'Universitario en curso',
+        'Universitario completo',
+        'Bootcamp',
+        'Curso online',
+        'Posgrado / Máster',
+      ].map((education) => (
+        <button
+          key={education}
+          onClick={() =>
+            setEducationLevel(education)
+          }
+          className={`p-4 rounded-lg border-2 transition-all text-left ${
+            educationLevel === education
+              ? 'border-[#4F46E5] bg-purple-50'
+              : 'border-border hover:border-muted-foreground'
+          }`}
+        >
+          {education}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
+
+            {/* STEP 5 */}
+            {currentStep === 5 && (
+  <div className="space-y-6">
+
+    <div>
+      <h3 className="mb-2">
+        ¿Qué modalidad laboral preferís?
+      </h3>
+
+      <p className="text-sm text-muted-foreground mb-4">
+        Podés seleccionar más de una
+      </p>
+    </div>
+
+    <div className="grid gap-3">
+
+      {[
+        'Remoto',
+        'Híbrido',
+        'Presencial',
+        'Freelance',
+        'Part-time',
+        'Full-time',
+      ].map((mod) => (
+        <button
+          key={mod}
+          onClick={() =>
+            setPreferredModalities((prev) =>
+              prev.includes(mod)
+                ? prev.filter(
+                    (m) => m !== mod
+                  )
+                : [...prev, mod]
+            )
+          }
+          className={`p-4 rounded-lg border-2 transition-all text-left ${
+            preferredModalities.includes(mod)
+              ? 'border-[#4F46E5] bg-purple-50'
+              : 'border-border hover:border-muted-foreground'
+          }`}
+        >
+          {mod}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
         </div>
+
+
 
         {/* BUTTONS */}
         <div className="flex items-center justify-between mt-8">

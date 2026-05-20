@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 import {
   Search,
@@ -14,6 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
+
+
   const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,6 +30,40 @@ export default function DashboardPage() {
 
   const [selectedSeniority, setSelectedSeniority] =
     useState<string[]>([]);
+
+  const [profile, setProfile] =
+  useState<any>(null);
+
+  useEffect(() => {
+
+  const fetchProfile =
+    async () => {
+
+      const {
+        data: { user },
+      } =
+        await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data, error } =
+        await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      setProfile(data);
+    };
+
+  fetchProfile();
+
+}, []);
 
   const jobs = [
     {
@@ -155,12 +193,19 @@ export default function DashboardPage() {
       {/* HEADER */}
       <div>
         <h1 className="text-3xl font-bold mb-2">
-          Empleos recomendados
+
+          Hola{' '}
+
+          {profile?.full_name ||
+          profile?.email ||
+          'Usuario'}
         </h1>
 
         <p className="text-muted-foreground">
-          {jobs.length} ofertas laborales
-          coinciden con tu perfil
+
+        {profile?.professional_area && `Área: ${profile.professional_area} • `}
+        {jobs.length} ofertas compatibles con tu perfil
+
         </p>
       </div>
 
@@ -296,13 +341,7 @@ export default function DashboardPage() {
                 </h4>
 
                 <div className="flex flex-wrap gap-2">
-                  {[
-                    "React",
-                    "TypeScript",
-                    "Node.js",
-                    "Python",
-                    "AWS",
-                  ].map((skill) => (
+                  {profile?.skills || [].map((skill) => (
                     <span
                       key={skill}
                       className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-500 text-sm font-medium"
@@ -315,6 +354,8 @@ export default function DashboardPage() {
             </div>
           </aside>
         )}
+
+        
 
         {/* JOBS */}
         <div className="flex-1 space-y-4">
