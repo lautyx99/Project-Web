@@ -287,7 +287,38 @@ const [loading, setLoading] =
 
         {/* JOBS */}
         <div className="flex-1 space-y-4">
-          {jobs.map((job) => (
+          {jobs.map((job) =>  {
+
+          const userSkills =
+          profile?.skills || [];
+
+          const jobSkills =
+          job.skills || [];
+
+          const matching_skills =
+          jobSkills.filter(
+          (skill: string) =>
+          userSkills.includes(skill)
+          );
+
+          const missing_skills =
+          jobSkills.filter(
+          (skill: string) =>
+          !userSkills.includes(skill)
+          );
+
+          const match_score =
+          jobSkills.length > 0
+          ? Math.round(
+          (matching_skills.length /
+            jobSkills.length) *
+            100
+          )
+          : 0;
+
+          
+              return (
+
             <div
               key={job.id}
               onClick={() =>
@@ -318,7 +349,7 @@ const [loading, setLoading] =
                 </div>
 
                 <div className="px-4 py-2 rounded-full bg-green-500/10 text-green-500 font-semibold">
-                  {job.match_score}% Match
+                  {match_score}% Match
                 </div>
               </div>
 
@@ -340,7 +371,7 @@ const [loading, setLoading] =
                 </p>
 
                 <div className="flex flex-wrap gap-2">
-                  {job.matching_skills.map(
+                  {matching_skills.map(
                     (skill : string) => (
                       <span
                         key={skill}
@@ -360,7 +391,7 @@ const [loading, setLoading] =
                 </p>
 
                 <div className="flex flex-wrap gap-2">
-                  {job.missing_skills.map(
+                  {missing_skills.map(
                     (skill : string) => (
                       <span
                         key={skill}
@@ -373,7 +404,8 @@ const [loading, setLoading] =
                 </div>
               </div>
             </div>
-          ))}
+              );
+          })}
         </div>
       </div>
     </div>

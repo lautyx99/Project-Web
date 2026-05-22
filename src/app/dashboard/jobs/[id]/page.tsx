@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 import {
   MapPin,
@@ -24,17 +24,24 @@ import {
 import { supabase }
 from '@/lib/supabase';
 
+
 interface JobDetailPageProps {
   params: {
     id: string;
   };
 }
 
-export default function JobDetailPage({
-  params,
-}: JobDetailPageProps) {
+
+export default function JobDetailPage() {
 
   const router = useRouter();
+
+  const params = useParams();
+
+  const id = params.id as string;
+
+  const [profile, setProfile] =
+  useState<any>(null);
 
   const [job, setJob] =
     useState<any>(null);
@@ -44,28 +51,38 @@ export default function JobDetailPage({
 
   useEffect(() => {
 
-    const fetchJob =
-      async () => {
+  const fetchJob = async () => {
 
-        const { data, error } =
-          await supabase
-            .from('jobs')
-            .select('*')
-            .eq('id', params.id)
-            .single();
+    // VALIDAR USUARIO
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-        if (error) {
-          console.error(error);
-        } else {
-          setJob(data);
-        }
+    if (!user) {
+      router.push("/login");
+      return;
+    }
 
-        setLoading(false);
-      };
+    // BUSCAR EMPLEO
+    const { data, error } =
+      await supabase
+        .from('jobs')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-    fetchJob();
+    if (error) {
+      console.error(error);
+    } else {
+      setJob(data);
+    }
 
-  }, [params.id]);
+    setLoading(false);
+  };
+
+  fetchJob();
+
+}, [id, router]);
 
   if (loading) {
     return (
@@ -76,6 +93,34 @@ export default function JobDetailPage({
   }
 
   if (!job) {
+
+    const userSkills =
+  profile?.skills || [];
+
+const jobSkills =
+  job.skills || [];
+
+const matchingSkills =
+  jobSkills.filter(
+    (skill: string) =>
+      userSkills.includes(skill)
+  );
+
+const missingSkills =
+  jobSkills.filter(
+    (skill: string) =>
+      !userSkills.includes(skill)
+  );
+
+const matchScore =
+  jobSkills.length > 0
+    ? Math.round(
+        (matchingSkills.length /
+          jobSkills.length) *
+          100
+      )
+    : 0;
+
     return (
       <div className="p-8">
         Empleo no encontrado
