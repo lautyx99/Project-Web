@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
+
+
 import {
   Search,
   SlidersHorizontal,
@@ -65,115 +67,34 @@ export default function DashboardPage() {
 
 }, []);
 
-  const jobs = [
-    {
-      id: "1",
-      title: "Senior React Developer",
-      company: "MercadoLibre",
-      location: "Buenos Aires",
-      modality: "Remoto",
-      salary: "$200k - $250k ARS",
-      matchScore: 95,
+ const [jobs, setJobs] =
+  useState<any[]>([]);
 
-      matchingSkills: [
-        "React",
-        "TypeScript",
-        "Node.js",
-        "GraphQL",
-        "AWS",
-      ],
+const [loading, setLoading] =
+  useState(true);
 
-      missingSkills: ["Kubernetes"],
-    },
+   useEffect(() => {
 
-    {
-      id: "2",
-      title: "Full Stack Engineer",
-      company: "Auth0",
-      location: "CABA",
-      modality: "Híbrido",
-      salary: "$180k - $220k ARS",
-      matchScore: 88,
+  const fetchJobs =
+    async () => {
 
-      matchingSkills: [
-        "React",
-        "Python",
-        "PostgreSQL",
-        "Docker",
-      ],
+      const { data, error } =
+        await supabase
+          .from('jobs')
+          .select('*');
 
-      missingSkills: [
-        "Redis",
-        "Microservices",
-      ],
-    },
+      if (error) {
+        console.error(error);
+      } else {
+        setJobs(data || []);
+      }
 
-    {
-      id: "3",
-      title: "Frontend Developer",
-      company: "Globant",
-      location: "Buenos Aires",
-      modality: "Remoto",
-      salary: "$150k - $180k ARS",
-      matchScore: 82,
+      setLoading(false);
+    };
 
-      matchingSkills: [
-        "React",
-        "TypeScript",
-        "CSS",
-        "Tailwind",
-      ],
+  fetchJobs();
 
-      missingSkills: [
-        "Next.js",
-        "Testing Library",
-      ],
-    },
-
-    {
-      id: "4",
-      title: "Sr. Software Engineer",
-      company: "Despegar",
-      location: "CABA",
-      modality: "Híbrido",
-      salary: "$190k - $230k ARS",
-      matchScore: 78,
-
-      matchingSkills: [
-        "React",
-        "Node.js",
-        "MongoDB",
-      ],
-
-      missingSkills: [
-        "AWS",
-        "Lambda",
-        "DynamoDB",
-      ],
-    },
-
-    {
-      id: "5",
-      title: "Tech Lead Frontend",
-      company: "Ualá",
-      location: "Buenos Aires",
-      modality: "Remoto",
-      salary: "$220k - $280k ARS",
-      matchScore: 72,
-
-      matchingSkills: [
-        "React",
-        "TypeScript",
-        "Leadership",
-      ],
-
-      missingSkills: [
-        "Architecture",
-        "Mentoring",
-        "Mobile",
-      ],
-    },
-  ];
+}, []);
 
   const toggleFilter = (
     value: string,
@@ -188,6 +109,13 @@ export default function DashboardPage() {
     );
   };
 
+  if (loading) {
+  return (
+    <div className="p-8">
+      Cargando empleos...
+    </div>
+  );
+}
   return (
     <div className="space-y-8">
       {/* HEADER */}
@@ -341,7 +269,7 @@ export default function DashboardPage() {
                 </h4>
 
                 <div className="flex flex-wrap gap-2">
-                  {profile?.skills || [].map((skill) => (
+                  {(profile?.skills || []).map((skill: string) => (
                     <span
                       key={skill}
                       className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-500 text-sm font-medium"
@@ -363,7 +291,7 @@ export default function DashboardPage() {
             <div
               key={job.id}
               onClick={() =>
-                router.push(`/job/${job.id}`)
+                router.push(`/dashboard/jobs/${job.id}`)
               }
               className="bg-card border border-border rounded-2xl p-6 cursor-pointer hover:border-primary/50 hover:shadow-lg transition-all"
             >
@@ -390,7 +318,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="px-4 py-2 rounded-full bg-green-500/10 text-green-500 font-semibold">
-                  {job.matchScore}% Match
+                  {job.match_score}% Match
                 </div>
               </div>
 
@@ -412,8 +340,8 @@ export default function DashboardPage() {
                 </p>
 
                 <div className="flex flex-wrap gap-2">
-                  {job.matchingSkills.map(
-                    (skill) => (
+                  {job.matching_skills.map(
+                    (skill : string) => (
                       <span
                         key={skill}
                         className="px-3 py-1 rounded-full bg-green-500/10 text-green-500 text-sm"
@@ -432,8 +360,8 @@ export default function DashboardPage() {
                 </p>
 
                 <div className="flex flex-wrap gap-2">
-                  {job.missingSkills.map(
-                    (skill) => (
+                  {job.missing_skills.map(
+                    (skill : string) => (
                       <span
                         key={skill}
                         className="px-3 py-1 rounded-full bg-red-500/10 text-red-500 text-sm"

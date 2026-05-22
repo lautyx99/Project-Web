@@ -16,6 +16,14 @@ import {
 
 import { Button } from "@/components/ui/button";
 
+import {
+  useEffect,
+  useState,
+} from 'react';
+
+import { supabase }
+from '@/lib/supabase';
+
 interface JobDetailPageProps {
   params: {
     id: string;
@@ -25,69 +33,96 @@ interface JobDetailPageProps {
 export default function JobDetailPage({
   params,
 }: JobDetailPageProps) {
+
   const router = useRouter();
 
-  const job = {
-    id: params.id || "1",
+  const [job, setJob] =
+    useState<any>(null);
 
-    title: "Senior React Developer",
+  const [loading, setLoading] =
+    useState(true);
 
-    company: "MercadoLibre",
+  useEffect(() => {
 
-    location: "Buenos Aires, Argentina",
+    const fetchJob =
+      async () => {
 
-    modality: "Remoto",
+        const { data, error } =
+          await supabase
+            .from('jobs')
+            .select('*')
+            .eq('id', params.id)
+            .single();
 
-    salary: "$200k - $250k ARS",
+        if (error) {
+          console.error(error);
+        } else {
+          setJob(data);
+        }
 
-    postedDate: "Hace 3 días",
+        setLoading(false);
+      };
 
-    matchScore: 95,
+    fetchJob();
 
-    description: `Estamos buscando un Senior React Developer para unirse a nuestro equipo de producto.
+  }, [params.id]);
 
-Responsabilidades:
-• Desarrollar nuevas features para la plataforma web
-• Colaborar con diseñadores y product managers
-• Optimizar performance de aplicaciones React
-• Participar en code reviews y mentoría
-• Mantener y mejorar el design system
+  if (loading) {
+    return (
+      <div className="p-8">
+        Cargando empleos...
+      </div>
+    );
+  }
 
-Requisitos:
-• 5+ años de experiencia con React
-• Sólido conocimiento de TypeScript
-• Experiencia con Node.js y APIs REST
-• Familiaridad con metodologías ágiles
-• Inglés intermedio/avanzado`,
+  if (!job) {
+    return (
+      <div className="p-8">
+        Empleo no encontrado
+      </div>
+    );
+  }
 
-    matchingSkills: [
-      "React",
-      "TypeScript",
-      "Node.js",
-      "GraphQL",
-      "AWS",
-      "Git",
-      "REST APIs",
-      "Agile",
-    ],
+  const matchingSkills =
+    job.matching_skills || [];
 
-    missingSkills: [
-      "Kubernetes",
-      "Terraform",
-    ],
+  const missingSkills =
+    job.missing_skills || [];
 
-    recommendations: [
-      "Completá un curso de Kubernetes para aumentar tu match al 98%",
-      "Agregá experiencia con Terraform a tu perfil",
-      "Destacá tus proyectos con microservicios",
-    ],
+  const recommendations =
+    job.recommendations || [];
 
-    compatibility: {
-      technical: 95,
-      experience: 90,
-      cultural: 85,
-    },
-  };
+  const compatibility =
+    job.compatibility || {
+      technical: 85,
+      experience: 80,
+      cultural: 90,
+    };
+
+  const matchScore =
+    job.match_score || 85;
+  
+
+  const title =
+  job.title || '';
+
+const company =
+  job.company || '';
+
+const location =
+  job.location || '';
+
+const modality =
+  job.modality || '';
+
+const salary =
+  job.salary || '';
+
+const postedDate =
+  job.postedDate || '';
+
+const description =
+  job.description || '';
 
   return (
     <div className="space-y-8">
@@ -113,7 +148,7 @@ Requisitos:
             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white shadow-lg">
               <div className="text-center">
                 <div className="text-4xl font-bold">
-                  {job.matchScore}%
+                  {matchScore}%
                 </div>
 
                 <div className="text-sm opacity-90">
@@ -126,36 +161,36 @@ Requisitos:
           {/* INFO */}
           <div className="flex-1">
             <h1 className="text-4xl font-bold mb-2">
-              {job.title}
+              {title}
             </h1>
 
             <h2 className="text-xl text-muted-foreground mb-6">
-              {job.company}
+              {company}
             </h2>
 
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-8">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
 
-                {job.location}
+                {location}
               </div>
 
               <div className="flex items-center gap-2">
                 <Briefcase className="w-4 h-4" />
 
-                {job.modality}
+                {modality}
               </div>
 
               <div className="flex items-center gap-2">
                 <DollarSign className="w-4 h-4" />
 
-                {job.salary}
+                {salary}
               </div>
 
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
 
-                {job.postedDate}
+                {postedDate}
               </div>
             </div>
 
@@ -184,7 +219,7 @@ Requisitos:
           </div>
 
           <div className="text-4xl font-bold text-green-500 mb-2">
-            {job.compatibility.technical}%
+            {compatibility.technical}%
           </div>
 
           <p className="text-sm text-muted-foreground">
@@ -203,7 +238,7 @@ Requisitos:
           </div>
 
           <div className="text-4xl font-bold text-blue-500 mb-2">
-            {job.compatibility.experience}%
+            {compatibility.experience}%
           </div>
 
           <p className="text-sm text-muted-foreground">
@@ -222,7 +257,7 @@ Requisitos:
           </div>
 
           <div className="text-4xl font-bold text-purple-500 mb-2">
-            {job.compatibility.cultural}%
+            {compatibility.cultural}%
           </div>
 
           <p className="text-sm text-muted-foreground">
@@ -244,8 +279,8 @@ Requisitos:
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {job.matchingSkills.map(
-              (skill) => (
+            {matchingSkills.map(
+              (skill : string) => (
                 <span
                   key={skill}
                   className="px-3 py-1 rounded-full bg-green-500/10 text-green-500 text-sm font-medium"
@@ -258,11 +293,11 @@ Requisitos:
 
           <p className="text-sm text-muted-foreground mt-5">
             {
-              job.matchingSkills.length
+              matchingSkills.length
             }{" "}
             de{" "}
-            {job.matchingSkills.length +
-              job.missingSkills.length}{" "}
+            {matchingSkills.length +
+              missingSkills.length}{" "}
             skills requeridas
           </p>
         </div>
@@ -278,8 +313,8 @@ Requisitos:
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {job.missingSkills.map(
-              (skill) => (
+            {missingSkills.map(
+              (skill : string) => (
                 <span
                   key={skill}
                   className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 text-sm font-medium"
@@ -309,8 +344,8 @@ Requisitos:
         </div>
 
         <ul className="space-y-4">
-          {job.recommendations.map(
-            (rec, i) => (
+          {recommendations.map(
+            (rec : string, i : number) => (
               <li
                 key={i}
                 className="flex items-start gap-3"
@@ -333,7 +368,7 @@ Requisitos:
         </h3>
 
         <div className="whitespace-pre-line text-muted-foreground leading-7">
-          {job.description}
+          {description}
         </div>
       </div>
     </div>
