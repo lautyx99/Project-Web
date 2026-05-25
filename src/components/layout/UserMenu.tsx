@@ -49,15 +49,15 @@ export function UserMenu() {
       >
         <img
           src={
-            user.avatar ||
+            user.user_metadata?.avatar_url ||
             `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`
           }
-          alt={user.name}
+          alt={user.user_metadata?.full_name || user.email || ''}
           className="w-8 h-8 rounded-full"
         />
 
         <div className="hidden md:block text-left">
-          <p className="text-sm font-medium">{user.name}</p>
+          <p className="text-sm font-medium">{user.user_metadata?.full_name || user.email?.split('@')[0]}</p>
           <p className="text-xs text-muted-foreground">
             {user.email}
           </p>
@@ -75,7 +75,7 @@ export function UserMenu() {
         <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-50">
           {/* USER INFO */}
           <div className="p-3 border-b border-border">
-            <p className="font-medium text-sm">{user.name}</p>
+            <p className="font-medium text-sm">{user.user_metadata?.full_name || user.email?.split('@')[0]}</p>
             <p className="text-xs text-muted-foreground">
               {user.email}
             </p>
@@ -85,7 +85,7 @@ export function UserMenu() {
           <div className="py-2">
             <button
               onClick={() => {
-                router.push("/profile");
+              router.push("/dashboard/profile");
                 setIsOpen(false);
               }}
               className="flex items-center gap-3 w-full px-4 py-2 hover:bg-muted text-sm"
@@ -96,7 +96,7 @@ export function UserMenu() {
 
             <button
               onClick={() => {
-                router.push("/settings");
+              router.push("/dashboard/settings");
                 setIsOpen(false);
               }}
               className="flex items-center gap-3 w-full px-4 py-2 hover:bg-muted text-sm"

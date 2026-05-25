@@ -16,7 +16,7 @@ export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const isAuthPage = pathname === "/auth";
+  const isAuthPage = pathname === "/login" || pathname === "/register";
 
   return (
     <nav className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
@@ -64,14 +64,14 @@ export function Navbar() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => router.push("/auth")}
+                  onClick={() => router.push("/login")}
                 >
                   Iniciar sesión
                 </Button>
 
                 <Button
                   size="sm"
-                  onClick={() => router.push("/auth")}
+                  onClick={() => router.push("/register")}
                 >
                   Comenzar
                 </Button>
